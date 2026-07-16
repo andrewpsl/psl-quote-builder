@@ -1,0 +1,880 @@
+<meta charset="utf-8">
+<title>PSL Quote Builder — TIS-LED</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --ink:#0B0E12; --orange:#E8651E; --logo-orange:#F56600;
+    --text:#3a434e; --head:#0A0A0A; --muted:#8a939d; --rule:#D8DDE2;
+    --hair:#eceff2; --cream:#FDF3EC; --darkgray:#8B95A4;
+    --chakra:'Chakra Petch',sans-serif; --barlow:'Barlow',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#5a6470;font-family:var(--barlow);padding:0 0 60px}
+
+  /* ---------- toolbar ---------- */
+  .bar{position:sticky;top:0;z-index:50;background:var(--ink);border-bottom:2px solid var(--orange);
+    padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .bar .ttl{font-family:var(--chakra);font-weight:700;color:#fff;font-size:14px;letter-spacing:.04em;margin-right:4px}
+  .bar .ttl span{color:var(--orange)}
+  .seg{display:flex;background:#171d25;border-radius:6px;overflow:hidden;border:1px solid #2a333f}
+  .seg button{font-family:var(--chakra);font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    background:transparent;color:#8B95A4;border:0;padding:7px 13px;cursor:pointer}
+  .seg button[aria-pressed=true]{background:var(--orange);color:#fff}
+  .segl{font-family:var(--chakra);font-weight:600;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    color:#5c6673;padding:8px 9px 7px;border-right:1px solid #2a333f;background:#11161d}
+  .seg button:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+  .btn{font-family:var(--chakra);font-weight:600;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+    background:#171d25;color:#c9d2dc;border:1px solid #2a333f;border-radius:6px;padding:7px 13px;cursor:pointer}
+  .btn:hover{border-color:var(--orange);color:#fff}
+  .btn.pri{background:var(--orange);border-color:var(--orange);color:#fff}
+  .btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .hint{color:#8B95A4;font-size:11px;margin-left:auto;font-family:var(--chakra);letter-spacing:.04em}
+  .who{font-family:var(--chakra);font-weight:600;font-size:11px;letter-spacing:.06em;background:#171d25;
+    color:#fff;border:1px solid #2a333f;border-radius:6px;padding:7px 11px;width:150px}
+  .who::placeholder{color:#5c6673;font-weight:400;letter-spacing:.09em;text-transform:uppercase}
+  .who:focus{outline:0;border-color:var(--orange)}
+  .who.need{border-color:var(--orange);background:#2a1a10}
+
+  /* ---------- page ---------- */
+  .sheet{width:8.5in;min-height:11in;background:#fff;margin:24px auto;position:relative;
+    box-shadow:0 8px 40px rgba(0,0,0,.35);display:flex;flex-direction:column}
+  .band{background:var(--ink);padding:14px 40px 12px;display:flex;justify-content:space-between;align-items:flex-start}
+  .brandwrap{display:flex;align-items:center;gap:14px}
+  .wm{font-family:var(--chakra);font-weight:700;font-size:27pt;color:#fff;line-height:1;letter-spacing:.02em;white-space:nowrap}
+  .bywrap{display:flex;align-items:center;gap:8px;border-left:1px solid #2f3945;padding-left:14px}
+  .by{font-family:var(--chakra);font-size:8pt;color:var(--darkgray);letter-spacing:.1em}
+  .psllogo img{height:30px;width:auto;display:block}
+  .kick{font-family:var(--chakra);font-size:8pt;color:#FF8A3C;letter-spacing:.22em;text-transform:uppercase;margin-top:7px}
+  .doctitle{font-family:var(--chakra);font-size:8pt;color:var(--darkgray);letter-spacing:.18em;
+    text-transform:uppercase;text-align:right;line-height:1.7}
+  .doctitle b{color:#fff;font-weight:600}
+  .doctitle .qno{color:var(--orange);font-weight:600}
+  .familybar{background:var(--cream);padding:4px 40px;display:flex;justify-content:space-between;
+    font-family:var(--chakra);font-size:7pt;letter-spacing:.14em;text-transform:uppercase}
+  .familybar .l{color:var(--orange);font-weight:600}
+  .familybar .r{color:var(--muted)}
+  .body{padding:14px 40px 0;flex:1}
+  .foot{margin:12px 40px 0;padding:8px 0 14px;border-top:1px solid var(--rule);display:flex;
+    justify-content:space-between;gap:24px;font-size:7.2pt;color:var(--muted);line-height:1.5}
+  .foot .brand{font-family:var(--chakra);text-align:right;white-space:nowrap}
+  .footlogo img{height:16px;vertical-align:-3px}
+
+  /* ---------- document blocks ---------- */
+  .proj{border-left:3px solid var(--orange);padding-left:14px;margin-bottom:12px}
+  .proj h1{font-family:var(--chakra);font-weight:700;font-size:19pt;color:var(--head);line-height:1.1}
+  .proj .meta{font-family:var(--chakra);font-weight:600;font-size:10pt;color:var(--orange);letter-spacing:.04em;margin-top:3px}
+  .wedge{border-left:3px solid var(--orange);padding-left:14px;margin-bottom:12px}
+  .wedge h2{font-family:var(--chakra);font-weight:600;font-size:12.5pt;color:var(--head);line-height:1.15}
+  .wedge h2 em{color:var(--orange);font-style:normal}
+  .lead{font-size:7.8pt;color:var(--text);line-height:1.4;margin-top:5px}
+  .lead b{color:var(--head)}
+  .seclbl{display:flex;align-items:center;gap:9px;margin:14px 0 4px}
+  .seclbl .t{font-family:var(--chakra);font-weight:600;font-size:8.5pt;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--head);white-space:nowrap}
+  .seclbl .ln{flex:1;height:1px;background:var(--rule)}
+  .seclbl .n{font-family:var(--chakra);font-size:7pt;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+  table.price{width:100%;border-collapse:collapse;font-size:9pt}
+  table.price td{padding:5px 8px;border-bottom:1px solid var(--hair);color:var(--head);vertical-align:middle}
+  table.price td.n{font-family:var(--chakra);font-weight:600}
+  table.price td.v{text-align:right;font-family:var(--chakra);font-weight:700;white-space:nowrap;width:150px}
+  table.price td.x{width:26px;text-align:center}
+  table.price tr.sub td{border-top:1.5px solid var(--rule);border-bottom:none;padding-top:7px;color:var(--muted);font-size:8.4pt}
+  table.price tr.sub td.v{color:var(--head)}
+  table.price tr.add td{border-bottom:none;padding:2.5px 8px;font-size:8.4pt;color:var(--text)}
+  table.price tr.add td.n{font-weight:500}
+  table.price tr.add td.v{font-weight:600}
+  .ratebox{color:var(--orange);font-weight:700}
+  .ratebox [contenteditable]{display:inline-block;min-width:22px;text-align:right}
+  .addrow{display:flex;gap:6px;flex-wrap:wrap}
+  table.price tr.tot td{border-top:2px solid var(--head);border-bottom:none;padding-top:8px;font-size:11pt}
+  table.price tr.tot td.v{color:var(--orange)}
+  .pricenote{font-size:7.2pt;color:var(--muted);margin-top:5px;line-height:1.4}
+
+  .scols{display:flex;gap:24px}
+  .scol{flex:1;min-width:0}
+  ul.slist{list-style:none}
+  ul.slist li{position:relative;padding-left:13px;font-size:7.8pt;color:var(--text);line-height:1.42;margin-bottom:3px}
+  ul.slist li:before{content:'';position:absolute;left:0;top:5px;width:5px;height:5px;background:var(--orange);border-radius:50%}
+  ul.slist li.sub{padding-left:24px;color:#6b747e;font-size:7.4pt}
+  ul.slist li.sub:before{left:13px;width:4px;height:4px;background:#c2cbd3}
+  ul.slist.ex li:before{background:#c2cbd3}
+  .callout{background:var(--cream);border-left:3px solid var(--orange);border-radius:0 6px 6px 0;
+    padding:8px 13px;margin-top:12px;font-size:7.8pt;color:var(--text);line-height:1.45}
+  .callout b{color:var(--head)}
+  .tnote{font-size:7.6pt;color:var(--text);line-height:1.45}
+  .tnote b{color:var(--head)}
+
+  /* ---------- editing affordances ---------- */
+  [contenteditable]{outline:0}
+  [contenteditable]:hover{background:#fff6f0;border-radius:3px;box-shadow:0 0 0 3px #fff6f0}
+  [contenteditable]:focus{background:#fff1e7;border-radius:3px;box-shadow:0 0 0 3px #fff1e7}
+  [contenteditable]:empty:before{content:attr(data-ph);color:#c2cbd3}
+  .kill{background:none;border:0;color:#d8dde2;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;font-family:var(--barlow)}
+  .kill:hover{color:var(--orange)}
+  .additem{font-family:var(--chakra);font-weight:600;font-size:7pt;letter-spacing:.12em;text-transform:uppercase;
+    background:none;border:1px dashed var(--rule);border-radius:4px;color:var(--muted);padding:3px 9px;cursor:pointer;margin-top:5px}
+  .additem:hover{border-color:var(--orange);color:var(--orange)}
+
+  /* ---------- quote log ---------- */
+  .log{width:8.5in;margin:24px auto;background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.35);padding:0 0 30px}
+  .loghead{background:var(--ink);padding:16px 40px;display:flex;justify-content:space-between;align-items:center}
+  .loghead h2{font-family:var(--chakra);font-weight:700;font-size:20pt;color:#fff}
+  .loghead .sub{font-family:var(--chakra);font-size:8pt;color:var(--darkgray);letter-spacing:.16em;text-transform:uppercase;margin-top:3px}
+  .logwrap{padding:0 40px}
+  table.log{width:100%;border-collapse:collapse;font-size:8.4pt;margin-top:16px}
+  table.log th{font-family:var(--chakra);font-weight:600;text-align:left;font-size:7pt;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);padding:0 8px 6px;border-bottom:1.5px solid var(--head)}
+  table.log td{padding:6px 8px;border-bottom:1px solid var(--hair);color:var(--text);vertical-align:top}
+  table.log td.no{font-family:var(--chakra);font-weight:700;color:var(--head);white-space:nowrap}
+  table.log td.v{text-align:right;font-family:var(--chakra);font-weight:600;color:var(--head);white-space:nowrap}
+  table.log tr:hover td{background:#fff6f0}
+  .pill{display:inline-block;font-family:var(--chakra);font-weight:600;font-size:6.6pt;letter-spacing:.1em;
+    text-transform:uppercase;padding:2px 7px;border-radius:20px;background:var(--cream);color:var(--orange);white-space:nowrap}
+  .empty{padding:50px 40px;text-align:center;color:var(--muted);font-size:9pt}
+  .logstats{display:flex;gap:18px;padding:16px 40px 0}
+  .lst{flex:1;border-top:2px solid var(--orange);padding-top:9px}
+  .lstn{font-family:var(--chakra);font-weight:700;font-size:18pt;color:var(--head);line-height:1}
+  .lstl{font-size:7.2pt;color:var(--muted);margin-top:3px}
+  .warn{background:#FDF3EC;border-left:3px solid var(--orange);margin:16px 40px 0;padding:9px 13px;
+    font-size:8pt;color:var(--text);line-height:1.45;border-radius:0 6px 6px 0}
+  .warn b{color:var(--head)}
+
+  /* ---------- export ---------- */
+  body.exporting .kill, body.exporting .additem, body.exporting .addrow{display:none !important}
+  body.exporting [contenteditable]:hover, body.exporting [contenteditable]:focus{background:none !important;box-shadow:none !important}
+  body.exporting [contenteditable]:empty:before{content:'' !important}
+  .btn[disabled]{opacity:.55;cursor:default}
+
+  /* ---------- print ---------- */
+  @page{size:Letter;margin:0}
+  @media print{
+    html,body{background:#fff;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .band,.familybar,.callout,.seg,.doctitle .qno{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .bar,.kill,.additem,.hint{display:none !important}
+    .sheet{box-shadow:none;margin:0;width:8.5in;height:auto;min-height:0;page-break-after:auto;page-break-inside:auto}
+    .scols{page-break-inside:auto}
+    .scol{page-break-inside:auto}
+    ul.slist li{page-break-inside:avoid}
+    .band{page-break-after:avoid}
+    .callout{page-break-inside:avoid}
+    [contenteditable]:hover,[contenteditable]:focus{background:none;box-shadow:none}
+    .foot{margin-top:auto}
+  }
+  @media (max-width:900px){ .sheet{transform-origin:top left} }
+</style>
+
+<div class="bar">
+  <div class="ttl">PSL Quote Builder <span>· TIS-LED™</span></div>
+  <div class="seg" role="group" aria-label="View">
+    <button data-view="build" aria-pressed="true">Build</button>
+    <button data-view="log" aria-pressed="false">Quote log</button>
+  </div>
+  <div class="seg" role="group" aria-label="Scope type">
+    <button data-scope="pia" aria-pressed="true">Pole In Air</button>
+    <button data-scope="turnkey" aria-pressed="false">Turnkey</button>
+    <button data-scope="retrofit" aria-pressed="false">Retrofit</button>
+  </div>
+  <div class="seg" role="group" aria-label="Service voltage" id="voltseg">
+    <span class="segl">Service</span>
+    <button data-volt="120/240" aria-pressed="false">120/240</button>
+    <button data-volt="120/208" aria-pressed="false">120/208</button>
+    <button data-volt="277/480" aria-pressed="true">277/480</button>
+  </div>
+  <button class="btn" id="addline">+ Price line</button>
+  <button class="btn" id="newquote">New quote</button>
+  <button class="btn pri" id="print">Download PDF</button>
+  <input class="who" id="whoami" type="text" placeholder="Your name" aria-label="Your name — stamped on every quote you issue" autocomplete="off">
+  <div class="hint" id="hint">Click any text to edit · quote number is assigned on download</div>
+</div>
+
+<div id="doc"></div>
+
+<script>
+/* Logos are embedded as data URIs so this file works standalone —
+   emailed, dropped on a share, or opened from anywhere — with no sibling assets. */
+const LOGO_ORANGE = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA3MjAgNzIwIj4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNi4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjEgQnVpbGQgMjA3KSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICNmMDZhMjQ7CiAgICAgIH0KCiAgICAgIC5zdDEgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00MjcuNzksMzM0Ljg4YzMyLjUxLDAsNTIuNzcsMTcuNzMsNDAuMTEsNjAuMzdsLTQzLjA2LDE0Ni40OWMtOS4yOSwzMC44Mi0zMy4zNSwzNS40Ni01NC44OCwzNS40NmgtODMuMTdjLTI0LjA3LDAtNDAuMTEtMTkuNDItMzEuNjYtNDcuMjhsMjEuMTEtNzIuNjFoNjcuMTNsLTE2LjA0LDUzLjE5Yy0yLjExLDcuMTgsMi4xMSw4LjQ0LDcuMTgsOC40NGgxNi4wNGM3LjYsMCwxMS40LTIuMTEsMTMuNTEtOS43MWwzNC4xOS0xMTUuNjhjLjg1LTMuMzguODUtNS45MS00LjY0LTUuOTFoLTk2LjY4bDE1LjYyLTUyLjc3aDExNS4yNVpNMzE1LjUsMzI0Ljc1bDQzLjA2LTE0NS42NWM4Ljg3LTMwLjgyLDMwLjgyLTM2LjMxLDUyLjM1LTM2LjMxaDEzMS4zbC0zNS4wNCwxMTkuOS03MS4zNSwxNi4wNCwyMy42NC03OS43OWgtMjYuNmMtNy42LDAtMTAuOTgsMi4xMS0xMy4wOSw5LjcxbC0zMy43NywxMTYuMWgtNzAuNVoiLz4KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNjEzLjgxLDUxMS43N2wtMzUuODksNjUuNDRoLTk4Ljc5Yy0xMS44MiwwLTI3Ljg2LTEwLjk4LTIxLjExLTM0LjYybDExNy43OS0zOTkuOGg3Mi4xOWwtMTA4LjUsMzY4Ljk4aDc0LjNaIi8+CiAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTMwNi4yNiwxNDIuNzloLTExNy4zMWwtMzMsNTIuMDJoMjguNzFsLTExMi42NiwzODIuNGg2MC4yN2w1Mi43My0xNzcuNTYsNDkuODcuMzZjMzUuODYuMzYsNDQuODQtMjQuMzksNDkuNS0zOS44MWw1Mi4wMi0xNzQuNzFjNy4xNy0yNC4zOS0yLjg4LTQyLjY5LTMwLjE0LTQyLjY5WiIvPgogIDxnPgogICAgPGNpcmNsZSBjbGFzcz0ic3QxIiBjeD0iMjU2LjIiIGN5PSIyMDQuODUiIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjI1MS4xMiIgY3k9IjIyOC4zMiIgcj0iOC43MyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTg3Ljg5IDI0NC40NCkgcm90YXRlKC00NSkiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjI0NC40NSIgY3k9IjI1MS43OCIgcj0iOC43MyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTU2Ljc2IDQzMS44NSkgcm90YXRlKC03Ni43MikiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjIzNy44MiIgY3k9IjI3NS4yNCIgcj0iOC43MyIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QxIiBjeD0iMjI3LjU1IiBjeT0iMjA0Ljg1IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDEiIGN4PSIyMjIuNDciIGN5PSIyMjguMzIiIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjIxNS44IiBjeT0iMjUxLjc4IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDEiIGN4PSIyMDkuMTciIGN5PSIyNzUuMjQiIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjE4OC45NiIgY3k9IjM0NS42NCIgcj0iOC43MyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE5MC44NCA0NTAuMTMpIHJvdGF0ZSgtNzYuNzIpIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDEiIGN4PSIxOTUuNTYiIGN5PSIzMjIuMTciIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjIwMi4zMiIgY3k9IjI5OC43MSIgcj0iOC43MyIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QxIiBjeD0iMjE3LjYxIiBjeT0iMzQ1LjY0IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDEiIGN4PSIyMjQuMjEiIGN5PSIzMjIuMTciIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjIzMC45NyIgY3k9IjI5OC43MSIgcj0iOC43MyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTk2LjczIDExMS4xMikgcm90YXRlKC0yMi41KSIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QxIiBjeD0iMjQzLjk0IiBjeT0iMzQ1LjY0IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDEiIGN4PSIyNTAuNTQiIGN5PSIzMjIuMTciIHI9IjguNzMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xMDQuMjIgMTIwLjQpIHJvdGF0ZSgtMjIuNSkiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjI1Ny4yOSIgY3k9IjI5OC43MSIgcj0iOC43MyIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QxIiBjeD0iMjY0LjE1IiBjeT0iMjc1LjI0IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDEiIGN4PSIyNzAuNzgiIGN5PSIyNTEuNzgiIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjI3Ny40NSIgY3k9IjIyOC4zMiIgcj0iOC43MyIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QxIiBjeD0iMjgyLjUzIiBjeT0iMjA0Ljg1IiByPSI4LjczIi8+CiAgPC9nPgo8L3N2Zz4=";
+const LOGO_BLACK = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA3MjAgNzIwIj4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuNi4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjEgQnVpbGQgMjA3KSAgLS0+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5zdDAgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxwYXRoIGQ9Ik00MjcuNzksMzM0Ljg4YzMyLjUxLDAsNTIuNzcsMTcuNzMsNDAuMTEsNjAuMzdsLTQzLjA2LDE0Ni40OWMtOS4yOSwzMC44Mi0zMy4zNSwzNS40Ni01NC44OCwzNS40NmgtODMuMTdjLTI0LjA3LDAtNDAuMTEtMTkuNDItMzEuNjYtNDcuMjhsMjEuMTEtNzIuNjFoNjcuMTNsLTE2LjA0LDUzLjE5Yy0yLjExLDcuMTgsMi4xMSw4LjQ0LDcuMTgsOC40NGgxNi4wNGM3LjYsMCwxMS40LTIuMTEsMTMuNTEtOS43MWwzNC4xOS0xMTUuNjhjLjg1LTMuMzguODUtNS45MS00LjY0LTUuOTFoLTk2LjY4bDE1LjYyLTUyLjc3aDExNS4yNVpNMzE1LjUsMzI0Ljc1bDQzLjA2LTE0NS42NWM4Ljg3LTMwLjgyLDMwLjgyLTM2LjMxLDUyLjM1LTM2LjMxaDEzMS4zbC0zNS4wNCwxMTkuOS03MS4zNSwxNi4wNCwyMy42NC03OS43OWgtMjYuNmMtNy42LDAtMTAuOTgsMi4xMS0xMy4wOSw5LjcxbC0zMy43NywxMTYuMWgtNzAuNVoiLz4KICA8cGF0aCBkPSJNNjEzLjgxLDUxMS43N2wtMzUuODksNjUuNDRoLTk4Ljc5Yy0xMS44MiwwLTI3Ljg2LTEwLjk4LTIxLjExLTM0LjYybDExNy43OS0zOTkuOGg3Mi4xOWwtMTA4LjUsMzY4Ljk4aDc0LjNaIi8+CiAgPHBhdGggZD0iTTMwNi4yNiwxNDIuNzloLTExNy4zMWwtMzMsNTIuMDJoMjguNzFsLTExMi42NiwzODIuNGg2MC4yN2w1Mi43My0xNzcuNTYsNDkuODcuMzZjMzUuODYuMzYsNDQuODQtMjQuMzksNDkuNS0zOS44MWw1Mi4wMi0xNzQuNzFjNy4xNy0yNC4zOS0yLjg4LTQyLjY5LTMwLjE0LTQyLjY5WiIvPgogIDxnPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iMjU2LjIiIGN5PSIyMDQuODUiIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjI1MS4xMiIgY3k9IjIyOC4zMiIgcj0iOC43MyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTg3Ljg5IDI0NC40NCkgcm90YXRlKC00NSkiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjI0NC40NSIgY3k9IjI1MS43OCIgcj0iOC43MyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTU2Ljc2IDQzMS44NSkgcm90YXRlKC03Ni43MikiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjIzNy44MiIgY3k9IjI3NS4yNCIgcj0iOC43MyIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iMjI3LjU1IiBjeT0iMjA0Ljg1IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDAiIGN4PSIyMjIuNDciIGN5PSIyMjguMzIiIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjIxNS44IiBjeT0iMjUxLjc4IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDAiIGN4PSIyMDkuMTciIGN5PSIyNzUuMjQiIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjE4OC45NiIgY3k9IjM0NS42NCIgcj0iOC43MyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTE5MC44NCA0NTAuMTMpIHJvdGF0ZSgtNzYuNzIpIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDAiIGN4PSIxOTUuNTYiIGN5PSIzMjIuMTciIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjIwMi4zMiIgY3k9IjI5OC43MSIgcj0iOC43MyIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iMjE3LjYxIiBjeT0iMzQ1LjY0IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDAiIGN4PSIyMjQuMjEiIGN5PSIzMjIuMTciIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjIzMC45NyIgY3k9IjI5OC43MSIgcj0iOC43MyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTk2LjczIDExMS4xMikgcm90YXRlKC0yMi41KSIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iMjQzLjk0IiBjeT0iMzQ1LjY0IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDAiIGN4PSIyNTAuNTQiIGN5PSIzMjIuMTciIHI9IjguNzMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xMDQuMjIgMTIwLjQpIHJvdGF0ZSgtMjIuNSkiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjI1Ny4yOSIgY3k9IjI5OC43MSIgcj0iOC43MyIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iMjY0LjE1IiBjeT0iMjc1LjI0IiByPSI4LjczIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDAiIGN4PSIyNzAuNzgiIGN5PSIyNTEuNzgiIHI9IjguNzMiLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjI3Ny40NSIgY3k9IjIyOC4zMiIgcj0iOC43MyIvPgogICAgPGNpcmNsZSBjbGFzcz0ic3QwIiBjeD0iMjgyLjUzIiBjeT0iMjA0Ljg1IiByPSI4LjczIi8+CiAgPC9nPgo8L3N2Zz4=";
+
+/* ---------- scope data, lifted from the PSL master bid ---------- */
+const SCOPES = {
+  pia: {
+    wm: "Pole In Air", doc: "PIA-001",
+    kick: "Quote &amp; Scope of Work · Poles and Lights",
+    h2: 'Poles and lights. <em>Set, assembled, and aimed.</em>',
+    lead: '<b>Pole In Air (PIA)</b> is PSL\'s scope for projects where the electrical belongs to someone else. PSL augers the foundations, sets the stub bases, builds out every pole — enclosures, cross arms, fixtures, harnesses — stands them, and aims them with the PSL Laser Alignment System. Conduit, panel, and power are the electrical contractor\'s scope.',
+    cols: [
+      [
+        ["Scope Includes", [
+          "Offloading equipment and material from trucks",
+          "Spot placing materials in staging locations",
+          "Auguring pole foundation holes",
+          "Removing dirt spoils to designated on-site area",
+          "Installing steel stub bases and backfilling with concrete",
+          "Building out each pole:",
+          ">Mounting enclosures",
+          ">Mounting cross-arm assemblies",
+          ">Mounting light fixtures",
+          ">Installing wire harnesses",
+          "Setting all poles onto bases",
+          "Final clean-up",
+          "Light level testing (if required)",
+          "Precision aiming (if needed)"
+        ]],
+        ["Scope Excludes", [
+          "Supplying and installing the main distribution panel, breakers, and switching",
+          "Electrical installation, trenching, and connections of underground conduit, power, and control wiring for each pole",
+          "Permitting, bonding, prevailing wages, and applicable sales tax (unless otherwise noted)"
+        ], "ex"]
+      ],
+      [
+        ["Customer Responsibilities", [
+          "Site access for standard 2-wheel drive rubber-tire equipment",
+          "Locate and mark all underground utilities not covered by local utilities \u2014 water, electrical, irrigation, sprinkler heads",
+          ">PSL and its subcontractors are not responsible for repairs to unmarked utilities",
+          "Tree trimming or removal that conflicts with the lighting installation",
+          "Locate and mark field reference points per the PSL-supplied layout (home plate, center of field)",
+          "Locate and mark the on-site area for foundation spoils and dumpsters",
+          "Extra cost of excavation in non-standard soils or soils not defined in a geotechnical report of the site",
+          ">Non-standard soils: rock, caliche, high water table, collapsing holes",
+          ">Standard soils can be excavated with standard earth-auguring equipment without sidewall cave-ins"
+        ]]
+      ]
+    ]
+  },
+  turnkey: {
+    wm: "Turnkey", doc: "TKY-001",
+    kick: "Quote &amp; Scope of Work · Complete Installation",
+    h2: 'One contract, one crew. <em>Ground to first pitch.</em>',
+    lead: 'PSL\'s <b>turnkey</b> scope covers the whole job: poles, fixtures, enclosures, harnesses, foundations, conduit, electrical service, and controls — installed, commissioned, and aimed. The owner gets one contract and one point of accountability instead of coordinating a lighting supplier against an electrical contractor.',
+    cols: [
+      [["PSL Responsibilities", [
+        "Provide required sports lighting material — poles, light fixtures, pole-mounted enclosures, and pole-length wire harnesses",
+        "Provide the turnkey installation, utilizing subcontractors if necessary",
+        "Provide layout of pole locations and aiming diagram",
+        "Provide project management as required",
+        "Provide stamped foundation designs to state-specific standards",
+        "Commission and train the customer on the PSL control system (2-hr training at startup)",
+        "Auger and build foundations to the stamped drawings provided",
+        "Excavate conduit trenches to each pole base and run conduit and wiring, with all terminations",
+        "Provide and install new electrical service with all gear to NEC code",
+        ">PSL does not cover labor, wire, or conduit from the transformer to the new gear",
+        "Install lighting contactor cabinets and dedicated 20 A breakers for Control Pro",
+        "1-hour comprehensive burn of all lights in each zone; verify every zone in auto and manual"
+      ]]],
+      [["Customer Responsibilities", [
+        "Complete site access for standard 2-wheel drive rubber-tire equipment",
+        "Locate existing underground utilities not covered by local utilities — water, electrical, irrigation, sprinkler heads",
+        ">PSL and its subcontractors are not responsible for repairs to unmarked utilities",
+        "Tree trimming or removal that conflicts with the lighting installation",
+        "Locate and mark field reference points per PSL-supplied layout (home plate, center of field)",
+        "Extra cost of trenching and excavation in non-standard soils or soils not defined in a geotechnical report",
+        ">Non-standard soils: rock, caliche, high water table, collapsing holes",
+        ">Standard soils can be excavated with standard earth-auguring equipment without sidewall cave-ins",
+        "Power company fees and requirements; utility service wiring to the meter base or panel by the serving utility",
+        "Permitting fees totaling over $100.00 (subcontractors obtain the permits)",
+        "Locate and mark the on-site area for foundation spoils and dumpsters"
+      ]]]
+    ]
+  },
+  retrofit: {
+    wm: "Retrofit", doc: "RTF-001",
+    kick: "Quote &amp; Scope of Work · Existing Poles Reused",
+    h2: 'New light on poles that still have life in them. <em>Reuse what\'s sound.</em>',
+    lead: 'PSL\'s <b>retrofit</b> scope puts the Remote Pro system on existing poles and reuses the existing electrical where it is serviceable. Drivers come out of the head and into an RDE enclosure at the base, so a pole that took a lift to service becomes a pole a technician reaches from a ladder.',
+    cols: [
+      [["PSL Responsibilities", [
+        "Supply poles, fixtures, wire harnesses, enclosures, and control cabinets",
+        "Provide layouts, aiming diagrams, and project management",
+        "Install the system and place dismantled equipment at the owner's designated location",
+        "Offload and store materials; provide waste disposal and security",
+        "Obtain necessary permits",
+        "Confirm utilities and irrigation are marked",
+        "Confirm pole locations per PSL drawings; notify the Project Manager of any issues",
+        "Install the Remote Pro™ System — fixtures, enclosures, harnesses, and pole-top assemblies",
+        "Erect and aim with the PSL Laser Alignment System",
+        "Reuse existing electrical; report any issues to the Project Manager",
+        "Install lighting contactor cabinets and 20 A breakers for Control Pro",
+        "1-hour burn test of lights per zone; verify zones in auto and manual modes",
+        "Commission Control Pro — contact PSL at (800) 674-6058"
+      ]]],
+      [["Customer Responsibilities", [
+        "Site access for 2-wheel drive equipment — no matting; PSL will minimize field damage",
+        "Locate and mark all underground lines not covered by local utilities (water, electrical, irrigation)",
+        ">PSL is not liable for unmarked utilities",
+        "Tree trimming or removal if needed",
+        "Mark field reference points (football center, home plate)",
+        "Power company fees and permitting costs over $200.00 (contractor obtains permits)",
+        "Provide sealed electrical plans if required"
+      ]]]
+    ]
+  }
+};
+
+const PAY = ["50% with purchase order","30% upon delivery","20% on construction draws"];
+
+/* Service voltage drives the electrical condition — turnkey only.
+   PIA excludes electrical entirely; retrofit reuses the existing service. */
+const VOLTS = {
+  "120/240": {label:"120/240 V", phase:"single-phase", note:"Branch current at this service is substantially higher than at 480 V, so conductor and conduit sizing increase accordingly."},
+  "120/208": {label:"120/208 V", phase:"three-phase", note:"Branch current at this service is higher than at 480 V, so conductor and conduit sizing increase accordingly."},
+  "277/480": {label:"277/480 V", phase:"three-phase", note:"This is PSL's preferred service — the lowest branch current and the smallest conductor for the load."}
+};
+
+/* Structural basis. PSL poles are designed to AASHTO LTS-6; wind speed, exposure,
+   and importance factor are project inputs to that standard. */
+const STRUCT = {
+  new: 'Poles are designed and stamped to <b>AASHTO LTS-6</b> — Standard Specifications for Structural Supports for Highway Signs, Luminaires, and Traffic Signals, 6th Edition — at <b>115 mph wind · Exposure C · Importance Factor C</b>, or to the governing local code where it differs.',
+  reuse: 'Poles supplied by PSL are designed and stamped to <b>AASHTO LTS-6</b> at <b>115 mph wind · Exposure C · Importance Factor C</b>, or to the governing local code where it differs. <b>Existing poles reused on this project are subject to structural review</b> — pole loading and EPA to be confirmed before order.'
+};
+
+const SHIP = 'All material ships to one designated location. Pole locations must be confirmed prior to shipping; changes after shipment may incur cost.';
+
+function condHTML(){
+  const parts = [];
+  if(scope === 'turnkey'){
+    const V = VOLTS[volt];
+    parts.push(`Electrical service requires <b>${V.label}, ${V.phase}</b>, located <b>within 20 ft of the design point</b>. ${V.note} Transformer-to-panel connections — labor, wire, and conduit — are excluded.`);
+  }
+  parts.push(SHIP);
+  parts.push(scope === 'retrofit' ? STRUCT.reuse : STRUCT.new);
+  return parts.join(' ');
+}
+
+let scope = "pia";
+let volt = "277/480";
+let quoteNo = null;
+let projName = "";
+let projCity = "";
+let projDate = "";   // set to today at boot; editable
+
+/* Quotes are dated the day they are written, so default it rather than making
+   someone type it. MM.DD.YYYY to match the PSL master bid. */
+function todayStr(){
+  const d = new Date(), p = n => String(n).padStart(2,"0");
+  return `${p(d.getMonth()+1)}.${p(d.getDate())}.${d.getFullYear()}`;
+}
+let user = "";
+let view = "build";   // build | log
+
+/* ---------- quote numbering ----------
+   PSL-MMDDYY-XYZ-NN
+     MMDDYY  date the quote is issued
+     XYZ     initials of the project name, one letter per significant word
+     NN      sequence for that project on that date, so a re-quote reads -02
+   The number is assigned on download, never on load, so drafts never consume one. */
+const pad = (n,w) => String(n).padStart(w,"0");
+function dayKey(d){ return `${pad(d.getMonth()+1,2)}${pad(d.getDate(),2)}${String(d.getFullYear()).slice(2)}`; }
+
+/* Skip the words nobody says out loud: "University School of Nashville" is USN, not USON. */
+const SKIP = new Set(["of","and","the","at","in","on","for","to","a","an","&","w/"]);
+function initials(name){
+  const words = String(name||"")
+    .replace(/[\u2013\u2014]/g," ")
+    .split(/[\s\-\/]+/)
+    .map(w => w.replace(/[^A-Za-z0-9]/g,""))
+    .filter(w => w.length && !SKIP.has(w.toLowerCase()));
+  return words.map(w => w[0].toUpperCase()).join("").slice(0,5);
+}
+
+/* ---------- shared quote registry ----------
+   Every issued quote is appended to one shared record, visible to everyone using
+   this tool. That makes the numbering company-wide rather than per-browser: two
+   people quoting the same project on the same day get -01 and -02, not two -01s.
+   NOTE: shared:true means everyone with this tool sees this log. It is a team
+   register, not a security boundary. */
+/* ---------- storage adapter ----------
+   Three environments, three backends, one API:
+     window.storage  Claude artifact — genuinely shared across users
+     localStorage    GitHub Pages / local file — persists, but PER BROWSER
+     memory          nothing available — this session only
+   The tool reports which one it got rather than pretending they are equivalent. */
+let storeMode = "memory";     // shared | local | memory
+const mem = {};
+const store = {
+  async get(k, shared){
+    if(typeof window !== "undefined" && window.storage){
+      try{ const r = await window.storage.get(k, !!shared); storeMode = "shared"; return r && r.value != null ? r.value : null; }
+      catch(e){ storeMode = "shared"; return null; }
+    }
+    try{ const v = localStorage.getItem(k); storeMode = "local"; return v; }catch(e){}
+    storeMode = "memory"; return k in mem ? mem[k] : null;
+  },
+  async set(k, v, shared){
+    if(typeof window !== "undefined" && window.storage){
+      try{ await window.storage.set(k, v, !!shared); storeMode = "shared"; return true; }catch(e){}
+    }
+    try{ localStorage.setItem(k, v); storeMode = "local"; return true; }catch(e){}
+    mem[k] = v; storeMode = "memory"; return true;
+  }
+};
+
+const REG_KEY = "psl:quotes:v1";
+let registry = [];        // [{no, day, ini, project, city, scope, volt, total, user, ts}]
+let regReady = false;
+let regShared = true;     // false once we fall back to this-browser-only
+
+async function loadRegistry(){
+  const raw = await store.get(REG_KEY, true);
+  try{ registry = raw ? JSON.parse(raw) : []; }catch(e){ registry = []; }
+  regShared = (storeMode === "shared");
+  regReady = true;
+}
+async function saveRegistry(){
+  return await store.set(REG_KEY, JSON.stringify(registry), true);
+}
+
+/* Next sequence is derived from the registry itself — one source of truth,
+   so the number can never disagree with the log. */
+function seqFor(day, ini){
+  return registry.filter(q => q.day === day && q.ini === ini).length + 1;
+}
+async function issueQuote(name, city, scopeKey, voltKey, total){
+  await loadRegistry();                       // re-read: someone else may have issued since
+  const d = new Date(), day = dayKey(d), ini = initials(name);
+  const no = `PSL-${day}-${ini}-${pad(seqFor(day, ini), 2)}`;
+  registry.push({
+    no, day, ini,
+    project: name,
+    city: city || "",
+    scope: SCOPES[scopeKey].wm,
+    volt: scopeKey === "turnkey" ? voltKey : "",
+    total: total || 0,
+    user: user || "Unassigned",
+    ts: d.toISOString()
+  });
+  await saveRegistry();
+  return no;
+}
+let lines = [
+  {n:"", v:""},
+  {n:"", v:""},
+  {n:"", v:""}
+];
+
+/* Optional adders. Each is off until added, and can be removed per quote.
+   Sales tax is a rate applied to the line-item subtotal; shipping and bonding
+   are flat amounts. Tax is not charged on bonding — bonding is a surety
+   premium, not a taxable sale of goods. */
+let adders = {
+  tax:      {on:false, rate:"", label:"Sales tax"},
+  shipping: {on:false, amt:"",  label:"Shipping"},
+  bonding:  {on:false, amt:"",  label:"Bonding"}
+};
+
+const rate = s => { const n = parseFloat(String(s).replace(/[^0-9.]/g,"")); return isNaN(n)?0:n; };
+function calc(){
+  const sub = lines.reduce((a,l)=>a+money(l.v),0);
+  const ship = adders.shipping.on ? money(adders.shipping.amt) : 0;
+  const bond = adders.bonding.on  ? money(adders.bonding.amt)  : 0;
+  const taxable = sub + ship;                      // goods + freight
+  const tax = adders.tax.on ? taxable * (rate(adders.tax.rate)/100) : 0;
+  return {sub, ship, bond, tax, total: sub + ship + bond + tax};
+}
+
+const money = s => {
+  const num = parseFloat(String(s).replace(/[^0-9.\-]/g,""));
+  return isNaN(num) ? 0 : num;
+};
+const fmt = n => "$" + n.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2});
+
+function ed(html, ph, cls){
+  return `<span class="${cls||''}" contenteditable="true" data-ph="${ph}">${html||""}</span>`;
+}
+function listHTML(items, cls){
+  return `<ul class="slist ${cls||''}">` + items.map(t=>{
+    const sub = t.startsWith(">");
+    return `<li class="${sub?'sub':''}"><span contenteditable="true">${sub?t.slice(1):t}</span><button class="kill" title="Remove" aria-label="Remove item">×</button></li>`;
+  }).join("") + `</ul>`;
+}
+
+/* The exclusions note has to agree with the lines actually on the quote —
+   a quote that lists sales tax cannot also say sales tax is excluded. */
+/* Update the computed cells in place. Re-rendering the whole document on every
+   blur destroys whatever the user just clicked — including the × they were
+   aiming at — so structural changes rebuild, edits only patch. */
+function refreshTotals(){
+  const C = calc();
+  const sub = document.getElementById('cellSub');
+  const tax = document.getElementById('cellTax');
+  const tot = document.getElementById('cellTot');
+  if(sub) sub.textContent = fmt(C.sub);
+  if(tax) tax.textContent = fmt(C.tax);
+  if(tot) tot.innerHTML = C.total>0 ? fmt(C.total) : '<span style="color:#c2cbd3">$0.00</span>';
+  const note = document.getElementById('pricenote');
+  if(note) note.textContent = noteText();
+}
+
+function noteText(){
+  const out = [];
+  if(!adders.tax.on) out.push("Sales tax");
+  out.push("permitting");
+  if(!adders.bonding.on) out.push("bonding");
+  const excl = out.length
+    ? out.join(", ").replace(/, ([^,]*)$/, " and $1") + (out.length>1 ? " are" : " is") + " not included. "
+    : "";
+  const inc = [];
+  if(adders.tax.on) inc.push("sales tax");
+  if(adders.shipping.on) inc.push("shipping");
+  if(adders.bonding.on) inc.push("bonding");
+  const incl = inc.length ? "Quoted total includes " + inc.join(", ").replace(/, ([^,]*)$/, " and $1") + ". " : "";
+  return (excl.charAt(0).toUpperCase() + excl.slice(1)) + incl + "Quote is confidential. Pricing and lead times are effective for 30 days from the date above.";
+}
+
+function renderLog(){
+  const rows = registry.slice().sort((a,b)=> a.no < b.no ? -1 : a.no > b.no ? 1 : 0);
+  const totalVal = rows.reduce((a,q)=>a+(+q.total||0),0);
+  const people = new Set(rows.map(q=>q.user)).size;
+  const body = rows.length ? rows.map(q=>`
+      <tr>
+        <td class="no">${q.no}</td>
+        <td>${q.project||"—"}${q.city?'<br><span style="color:#8a939d;font-size:7.4pt">'+q.city+'</span>':''}</td>
+        <td><span class="pill">${q.scope}</span>${q.volt?' <span class="pill">'+q.volt+'</span>':''}</td>
+        <td>${q.user||"—"}</td>
+        <td>${new Date(q.ts).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</td>
+        <td class="v">${q.total?fmt(+q.total):"—"}</td>
+      </tr>`).join("") : "";
+
+  document.getElementById("doc").innerHTML = `
+  <div class="log">
+    <div class="loghead">
+      <div><h2>Quote Log</h2><div class="sub">Every quote issued · numerical order</div></div>
+      <div style="text-align:right"><img src="${LOGO_ORANGE}" style="height:34px" alt="PSL"></div>
+    </div>
+    ${storeMode === "local" ? '<div class="warn"><b>This browser only.</b> Quotes are saved on this computer and survive a reload, but they are <b>not shared with the rest of the team</b> — two people can issue the same number on the same day. Shared numbering needs a server; see the README.</div>' : ''}
+    ${storeMode === "memory" ? '<div class="warn"><b>This session only.</b> No storage is available here, so this log clears when the page is closed.</div>' : ''}
+    <div class="logstats">
+      <div class="lst"><div class="lstn">${rows.length}</div><div class="lstl">Quotes issued</div></div>
+      <div class="lst"><div class="lstn">${people||0}</div><div class="lstl">People issuing</div></div>
+      <div class="lst"><div class="lstn">${totalVal?fmt(totalVal):"$0.00"}</div><div class="lstl">Total quoted</div></div>
+    </div>
+    <div class="logwrap">
+      ${rows.length ? `<table class="log">
+        <tr><th>Quote #</th><th>Project</th><th>Scope</th><th>Issued by</th><th>Date</th><th style="text-align:right">Total</th></tr>
+        ${body}
+      </table>` : '<div class="empty">No quotes issued yet.<br>Build one and hit <b>Download PDF</b> — it will be logged here.</div>'}
+    </div>
+  </div>`;
+}
+
+function render(){
+  if(view === "log") return renderLog();
+  const S = SCOPES[scope];
+  const C = calc();
+  const anyAdder = adders.tax.on || adders.shipping.on || adders.bonding.on;
+  const priceRows = lines.map((l,i)=>`
+    <tr>
+      <td class="n"><span contenteditable="true" data-ph="[Field / scope line]" data-line="${i}" data-k="n">${l.n}</span></td>
+      <td class="v"><span contenteditable="true" data-ph="[$000,000.00]" data-line="${i}" data-k="v">${l.v}</span></td>
+      <td class="x"><button class="kill" data-del="${i}" title="Remove" aria-label="Remove price line">×</button></td>
+    </tr>`).join("");
+
+  document.getElementById("doc").innerHTML = `
+  <div class="sheet">
+    <div class="band">
+      <div>
+        <div class="brandwrap">
+          <div class="wm">${S.wm}</div>
+          <div class="bywrap"><div class="by">by</div><div class="psllogo"><img src="${LOGO_ORANGE}" alt="PSL"></div></div>
+        </div>
+        <div class="kick">${S.kick}</div>
+      </div>
+      <div class="doctitle"><b>Quote</b><br>${S.wm}<br><span class="qno">${quoteNo || "DRAFT \u2014 not issued"}</span></div>
+    </div>
+    <div class="familybar"><span class="l">Part of TIS-LED™ · Total Integrated System</span><span class="r">by Premier Sports Lighting</span></div>
+
+    <div class="body">
+      <div class="proj">
+        <h1><span id="projname" contenteditable="true" data-ph="[PROJECT NAME]">${projName}</span></h1>
+        <div class="meta"><span id="projcity" contenteditable="true" data-ph="[CITY, STATE]">${projCity}</span> &nbsp;·&nbsp; <span id="projdate" contenteditable="true" data-ph="[00.00.2026]">${projDate}</span></div>
+      </div>
+
+      <div class="wedge">
+        <h2>${S.h2}</h2>
+        <div class="lead" contenteditable="true">${S.lead}</div>
+      </div>
+
+      <div class="seclbl"><span class="t">Materials Delivered to Job Site &amp; Installation</span><span class="ln"></span></div>
+      <table class="price">
+        ${priceRows}
+        ${anyAdder ? `<tr class="sub"><td class="n">Subtotal</td><td class="v" id="cellSub">${fmt(C.sub)}</td><td class="x"></td></tr>` : ''}
+        ${adders.shipping.on ? `<tr class="add"><td class="n">Shipping</td><td class="v"><span contenteditable="true" data-ph="[$0.00]" data-add="shipping" data-k="amt">${adders.shipping.amt}</span></td><td class="x"><button class="kill" data-rmadd="shipping" title="Remove" aria-label="Remove shipping">×</button></td></tr>` : ''}
+        ${adders.bonding.on ? `<tr class="add"><td class="n">Bonding</td><td class="v"><span contenteditable="true" data-ph="[$0.00]" data-add="bonding" data-k="amt">${adders.bonding.amt}</span></td><td class="x"><button class="kill" data-rmadd="bonding" title="Remove" aria-label="Remove bonding">×</button></td></tr>` : ''}
+        ${adders.tax.on ? `<tr class="add"><td class="n">Sales tax <span class="ratebox">@ <span contenteditable="true" data-ph="0.00" data-add="tax" data-k="rate">${adders.tax.rate}</span>%</span></td><td class="v" id="cellTax">${fmt(C.tax)}</td><td class="x"><button class="kill" data-rmadd="tax" title="Remove" aria-label="Remove sales tax">×</button></td></tr>` : ''}
+        <tr class="tot"><td class="n">Total — ${S.wm}</td><td class="v" id="cellTot">${C.total>0?fmt(C.total):'<span style="color:#c2cbd3">$0.00</span>'}</td><td class="x"></td></tr>
+      </table>
+      <div class="addrow">
+        <button class="additem" id="addline2">+ Price line</button>
+        ${!adders.shipping.on ? '<button class="additem" data-addadd="shipping">+ Shipping</button>' : ''}
+        ${!adders.bonding.on ? '<button class="additem" data-addadd="bonding">+ Bonding</button>' : ''}
+        ${!adders.tax.on ? '<button class="additem" data-addadd="tax">+ Sales tax</button>' : ''}
+      </div>
+      <div class="pricenote" id="pricenote" contenteditable="true">${noteText()}</div>
+
+      <div class="scols">
+        ${S.cols.map(col=>`
+          <div class="scol">
+            ${col.map(sec=>`
+              <div class="seclbl"><span class="t">${sec[0]}</span><span class="ln"></span></div>
+              ${listHTML(sec[1], sec[2])}
+              <button class="additem" data-addto="${sec[0]}">+ Add line</button>
+            `).join("")}
+          </div>`).join("")}
+      </div>
+
+      <div class="scols" style="margin-top:2px">
+        <div class="scol">
+          <div class="seclbl"><span class="t">Payment Terms</span><span class="ln"></span></div>
+          ${listHTML(PAY)}
+        </div>
+        <div class="scol">
+          <div class="seclbl"><span class="t">Conditions</span><span class="ln"></span><span class="n">${scope==="turnkey" ? VOLTS[volt].label+" · "+VOLTS[volt].phase : "AASHTO LTS-6"}</span></div>
+          <div class="tnote" contenteditable="true">${condHTML()}</div>
+        </div>
+      </div>
+
+      <div class="callout" contenteditable="true"><b>Commissioning:</b> if the system includes Control Pro, allow up to two weeks following completion of installation for all components to be fully commissioned and operating as intended. <b>Every project is different</b> — the scope above is PSL's standard ${S.wm} package and is adjusted per project.</div>
+    </div>
+
+    <div class="foot">
+      <div><b>Quote.</b> Scope, pricing, and conditions are project-specific and governed by the executed proposal. © Premier Sports Lighting. Assembled in the USA · made with domestic &amp; foreign parts.</div>
+      <div class="brand">TIS-LED™ by <span class="footlogo"><img src="${LOGO_BLACK}" alt="PSL"></span><br>Blacksburg, SC<br>(800) 674-6058 · psl-sports.com</div>
+    </div>
+  </div>`;
+  wire();
+}
+
+function wire(){
+  /* Bind every header field to state. Without this a re-render (adding a tax
+     line, switching scope) rebuilds the markup empty and silently discards
+     whatever was typed. */
+  [["projname","projName"],["projcity","projCity"],["projdate","projDate"]].forEach(([id,key])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const sync = ()=>{ const v = el.textContent.trim();
+      if(key==="projName") projName = v; else if(key==="projCity") projCity = v; else projDate = v; };
+    el.addEventListener('input', sync);
+    el.addEventListener('blur', sync);
+    el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } });
+  });
+  // price line edits -> keep model in sync, recompute total on blur
+  document.querySelectorAll('[data-line]').forEach(el=>{
+    el.addEventListener('blur', ()=>{
+      const i = +el.dataset.line, k = el.dataset.k;
+      lines[i][k] = el.textContent.trim();
+      if(k==='v'){
+        const n = money(lines[i].v);
+        if(n>0){ lines[i].v = fmt(n); el.textContent = lines[i].v; }
+        refreshTotals();
+      }
+    });
+    el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } });
+  });
+  document.querySelectorAll('[data-add]').forEach(el=>{
+    el.addEventListener('blur', ()=>{
+      const k = el.dataset.add, f = el.dataset.k;
+      const v = el.textContent.trim();
+      if(f === 'amt'){ const n = money(v); adders[k].amt = n>0 ? fmt(n) : ""; el.textContent = adders[k].amt; }
+      else           { const n = rate(v);  adders[k].rate = n>0 ? String(n) : ""; el.textContent = adders[k].rate; }
+      refreshTotals();
+    });
+    el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } });
+  });
+  document.querySelectorAll('[data-rmadd]').forEach(b=>{
+    b.addEventListener('mousedown', e=>{
+      e.preventDefault();                       // fire before blur rebuilds anything
+      const k=b.dataset.rmadd;
+      adders[k].on=false;
+      if(k==='tax') adders.tax.rate=""; else adders[k].amt="";
+      render();
+    });
+  });
+  document.querySelectorAll('[data-addadd]').forEach(b=>{
+    b.addEventListener('mousedown', e=>{
+      e.preventDefault();
+      const k=b.dataset.addadd;
+      adders[k].on=true;
+      render();
+      const el=document.querySelector(`[data-add="${k}"]`); if(el) el.focus();
+    });
+  });
+  document.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('mousedown', e=>{
+      e.preventDefault();
+      const i = +b.dataset.del;
+      const el = document.querySelector(`[data-line="${i}"][data-k="v"]`);
+      if(el) lines[i].v = el.textContent.trim();   // keep any in-flight edit
+      lines.splice(i,1);
+      if(!lines.length) lines.push({n:"",v:""});
+      render();
+    });
+  });
+  document.querySelectorAll('.kill:not([data-del])').forEach(b=>{
+    b.onclick = ()=> b.closest('li').remove();
+  });
+  document.querySelectorAll('[data-addto]').forEach(b=>{
+    b.onclick = ()=>{
+      const ul = b.previousElementSibling;
+      const li = document.createElement('li');
+      li.innerHTML = `<span contenteditable="true" data-ph="New line">&nbsp;</span><button class="kill" title="Remove" aria-label="Remove item">×</button>`;
+      ul.appendChild(li);
+      li.querySelector('.kill').onclick = ()=> li.remove();
+      li.querySelector('span').focus();
+    };
+  });
+  const add2 = document.getElementById('addline2');
+  if(add2) add2.onclick = addLine;
+}
+function addLine(){ lines.push({n:"",v:""}); render(); }
+
+document.querySelectorAll('[data-scope]').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('[data-scope]').forEach(x=>x.setAttribute('aria-pressed', x===b));
+    scope = b.dataset.scope;
+    syncVolt();
+    render();
+  };
+});
+document.querySelectorAll('[data-view]').forEach(b=>{
+  b.onclick = async ()=>{
+    document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed', x===b));
+    view = b.dataset.view;
+    if(view === 'log'){ await loadRegistry(); }
+    syncChrome();
+    render();
+  };
+});
+
+/* Identity, not authentication. This names who issued a quote; it does not
+   protect anything. Real access control needs a server.
+   NOTE: no prompt()/alert() — sandboxed frames block modal dialogs, which left
+   the user unable to type a name at all. A plain input always works. */
+function paintUser(){
+  const el = document.getElementById('whoami');
+  if(el && el.value !== user) el.value = user || "";
+}
+async function saveUser(){ await store.set("psl:user", user); }
+async function restoreUser(){ const v = await store.get("psl:user"); if(v) user = v; paintUser(); }
+(function wireUser(){
+  const el = document.getElementById('whoami');
+  el.addEventListener('input', ()=>{
+    user = el.value.trim();
+    el.classList.remove('need');
+  });
+  el.addEventListener('change', saveUser);
+  el.addEventListener('blur', saveUser);
+})();
+
+function syncChrome(){
+  const build = view === 'build';
+  document.querySelectorAll('[data-scope]').forEach(b=> b.parentElement.style.display = build ? 'flex' : 'none');
+  document.getElementById('addline').style.display = build ? '' : 'none';
+  document.getElementById('newquote').style.display = build ? '' : 'none';
+  document.getElementById('print').style.display = build ? '' : 'none';
+  syncVolt();
+}
+function syncVolt(){
+  const seg = document.getElementById('voltseg');
+  const on = scope === 'turnkey' && view === 'build';
+  seg.style.display = on ? 'flex' : 'none';   // electrical is turnkey-only scope
+  seg.setAttribute('aria-hidden', String(!on));
+}
+document.querySelectorAll('[data-volt]').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('[data-volt]').forEach(x=>x.setAttribute('aria-pressed', x===b));
+    volt = b.dataset.volt;
+    render();
+  };
+});
+document.getElementById('addline').onclick = addLine;
+document.getElementById('print').onclick = async ()=>{
+  const btn = document.getElementById('print');
+  const pn = document.getElementById('projname');
+  if(pn) projName = pn.textContent.trim();
+  const pc = document.getElementById('projcity');
+  if(pc) projCity = pc.textContent.trim();
+  const pd = document.getElementById('projdate');
+  if(pd) projDate = pd.textContent.trim();
+
+  if(!quoteNo && !projName){
+    document.getElementById('hint').textContent = "Enter a project name first \u2014 the quote number is built from it";
+    if(pn) pn.focus();
+    return;
+  }
+  if(!quoteNo && !user){
+    const who = document.getElementById('whoami');
+    who.classList.add('need');
+    who.focus();
+    document.getElementById('hint').textContent = "Add your name in the toolbar \u2014 every issued quote is logged against a person";
+    return;
+  }
+  if(!quoteNo){
+    btn.disabled = true;
+    const total = calc().total;
+    quoteNo = await issueQuote(projName, projCity, scope, volt, total);
+    render();
+    document.getElementById('hint').textContent = quoteNo + " issued and logged \u00b7 \u201cNew quote\u201d starts the next one";
+    btn.disabled = false;
+    await new Promise(r=>setTimeout(r,80));   // let the new number paint before capture
+  }
+  await downloadPDF();
+};
+
+/* Write the PDF straight to disk, named for the quote. No print dialog:
+   the operator asked for a file, and a dialog is a different thing.
+   Falls back to the browser print path only if the library fails to load. */
+async function downloadPDF(){
+  const sheet = document.querySelector('.sheet');
+  const btn = document.getElementById('print');
+  if(!sheet) return;
+
+  if(typeof html2pdf === 'undefined'){
+    document.getElementById('hint').textContent = "PDF library unavailable \u2014 falling back to the print dialog";
+    window.print();
+    return;
+  }
+
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Building PDF…';
+  document.body.classList.add('exporting');
+  try{
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;  // don't capture before webfonts land
+    await html2pdf().set({
+      margin: 0,
+      filename: (quoteNo || 'PSL-quote') + '.pdf',
+      image: {type:'jpeg', quality:0.98},
+      html2canvas: {scale:2, useCORS:true, backgroundColor:'#ffffff', logging:false, windowWidth:816},
+      jsPDF: {unit:'in', format:'letter', orientation:'portrait'},
+      pagebreak: {mode:['css','legacy']}
+    }).from(sheet).save();
+    document.getElementById('hint').textContent = quoteNo + '.pdf downloaded \u00b7 logged \u00b7 "New quote" starts the next one';
+  }catch(err){
+    document.getElementById('hint').textContent = 'PDF export failed \u2014 opening the print dialog instead';
+    window.print();
+  }finally{
+    document.body.classList.remove('exporting');
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+document.getElementById('newquote').onclick = ()=>{
+  quoteNo = null;
+  projName = "";
+  projCity = "";
+  projDate = todayStr();
+  lines = [{n:"",v:""},{n:"",v:""},{n:"",v:""}];
+  adders = {tax:{on:false,rate:"",label:"Sales tax"}, shipping:{on:false,amt:"",label:"Shipping"}, bonding:{on:false,amt:"",label:"Bonding"}};
+  document.getElementById('hint').textContent = "Click any text to edit \u00b7 quote number is assigned on download";
+  render();
+};
+
+(async function boot(){
+  projDate = todayStr();
+  await restoreUser();
+  await loadRegistry();
+  syncChrome();
+  render();
+})();
+</script>
