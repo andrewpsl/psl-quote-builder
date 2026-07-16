@@ -3,7 +3,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --ink:#0B0E12; --orange:#E8651E; --logo-orange:#F56600;
@@ -823,39 +824,76 @@ document.getElementById('print').onclick = async ()=>{
   await downloadPDF();
 };
 
-/* Write the PDF straight to disk, named for the quote. No print dialog:
-   the operator asked for a file, and a dialog is a different thing.
-   Falls back to the browser print path only if the library fails to load. */
+/* Write the PDF straight to disk, named for the quote. No print dialog.
+
+   Two things this has to get right, both of which the convenience wrappers get
+   wrong by default:
+     1. html2canvas captures from the current scroll offset unless told otherwise,
+        which lands half a page in the PDF. Pin the scroll to the sheet's top.
+     2. The sheet is 8.5in = 816 CSS px. Force that width at capture time and map
+        it to the page width explicitly, rather than letting the canvas size float
+        with whatever the viewport happens to be. */
+const PX_PER_IN = 96, SHEET_W = 8.5 * PX_PER_IN;   // 816
+
 async function downloadPDF(){
   const sheet = document.querySelector('.sheet');
   const btn = document.getElementById('print');
+  const hint = document.getElementById('hint');
   if(!sheet) return;
 
-  if(typeof html2pdf === 'undefined'){
-    document.getElementById('hint').textContent = "PDF library unavailable \u2014 falling back to the print dialog";
+  if(typeof html2canvas === 'undefined' || !window.jspdf){
+    hint.textContent = "PDF library unavailable \u2014 falling back to the print dialog";
     window.print();
     return;
   }
 
   const label = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Building PDF…';
+  btn.disabled = true; btn.textContent = 'Building PDF\u2026';
   document.body.classList.add('exporting');
+
+  const scrollY = window.scrollY, scrollX = window.scrollX;
+  window.scrollTo(0,0);                       // capture from a known origin
+
   try{
-    if(document.fonts && document.fonts.ready) await document.fonts.ready;  // don't capture before webfonts land
-    await html2pdf().set({
-      margin: 0,
-      filename: (quoteNo || 'PSL-quote') + '.pdf',
-      image: {type:'jpeg', quality:0.98},
-      html2canvas: {scale:2, useCORS:true, backgroundColor:'#ffffff', logging:false, windowWidth:816},
-      jsPDF: {unit:'in', format:'letter', orientation:'portrait'},
-      pagebreak: {mode:['css','legacy']}
-    }).from(sheet).save();
-    document.getElementById('hint').textContent = quoteNo + '.pdf downloaded \u00b7 logged \u00b7 "New quote" starts the next one';
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    await new Promise(r=>setTimeout(r,60));   // let layout settle after chrome is hidden
+
+    const canvas = await html2canvas(sheet, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: SHEET_W,
+      width: SHEET_W,
+      height: sheet.scrollHeight
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({unit:'pt', format:'letter', orientation:'portrait'});
+    const pw = pdf.internal.pageSize.getWidth();    // 612
+    const ph = pdf.internal.pageSize.getHeight();   // 792
+    const img = canvas.toDataURL('image/jpeg', 0.98);
+
+    const imgW = pw;
+    const imgH = canvas.height * (pw / canvas.width);   // preserve aspect
+
+    let y = 0, page = 0;
+    while(y < imgH - 1){
+      if(page) pdf.addPage();
+      pdf.addImage(img, 'JPEG', 0, -y, imgW, imgH);    // shift up to expose the next slice
+      y += ph; page++;
+      if(page > 12) break;                             // guard
+    }
+    pdf.save((quoteNo || 'PSL-quote') + '.pdf');
+    hint.textContent = (quoteNo || 'Quote') + '.pdf downloaded \u00b7 logged \u00b7 "New quote" starts the next one';
   }catch(err){
-    document.getElementById('hint').textContent = 'PDF export failed \u2014 opening the print dialog instead';
+    hint.textContent = 'PDF export failed \u2014 opening the print dialog instead';
     window.print();
   }finally{
     document.body.classList.remove('exporting');
+    window.scrollTo(scrollX, scrollY);
     btn.disabled = false; btn.textContent = label;
   }
 }
